@@ -19,53 +19,18 @@ require_package libssl-dev
 require_package wget
 
 LINUX_BRANCH=$(uname -r)
-kernel_name="L4TR21.5"
 
 # Download the latest the linux kernel sources from ubuntu-xenial tree
 #[ ! -d ${kernel_name} ] && git clone git://kernel.ubuntu.com/ubuntu/ubuntu-xenial.git --depth 1
-wget https://developer.nvidia.com/embedded/dlc/l4t-Jetson-TK1-Kernel-Sources-R21-5 -O ${kernel_name}.tbz2
-tar -jxvf ${kernel_name}.tbz2
+wget https://developer.nvidia.com/embedded/dlc/l4t-Jetson-TK1-Kernel-Sources-R21-5 -O ~/Downloads/kernel.tbz2
+cd /usr/src/
+tar -jxvf ~/Downloads/kernel.tbz2
 
-cd ${kernel_name}
-git init
-git commit -a -m "Initial Commit"
 
-# Verify that there are no trailing changes., warn the user to make corrective action if needed
-if [ $(git status | grep 'modified:' | wc -l) -ne 0 ];
-then
-	echo -e "\e[36mThe kernel has modified files:\e[0m"
-	git status | grep 'modified:'
-	echo -e "\e[36mProceeding will reset all local kernel changes. Press 'n' within 10 seconds to abort the procedure"
-	set +e
-	read -t 10 -r -p "Do you want to proceed? [Y/n]" response
-	set -e
-	response=${response,,}    # tolower
-	if [[ $response =~ ^(n|N)$ ]]; 
-	then
-		echo -e "\e[41mScript has been aborted on user requiest. Please resolve the modified files are rerun\e[0m"
-		exit 1
-	else
-		echo -e "\e[0m"
-		printf "Resetting local changes in %s folder\n " ${kernel_name}
-		git reset --hard
-		#echo -e "\e[32mUpdate the folder content with the latest from mainline branch\e[0m"
-		#git pull origin master
-	fi
-fi
-
-#Check if we need to apply patches or get reload stock drivers (Developers' option)
-[ "$#" -ne 0 -a "$1" == "reset" ] && reset_driver=1 || reset_driver=0
-
-if [ $reset_driver -eq 1 ];
-then 
-	echo -e "\e[43mUser requested to rebuild and reinstall ubuntu-xenial stock drivers\e[0m"	
-else
-	#Patching kernel for RealSense devices
-	echo -e "\e[32mApplying F200 formats patch patch\e[0m"
-	patch -p1 < ../"$( dirname "$0" )"/0001-Add-video-formats-for-Intel-real-sense-F200-camera-new.patch
-	echo -e "\e[32mApplying ZR300 SR300 and LR200 formats patch\e[0m"
-	patch -p1 < ../"$( dirname "$0" )"/0002-LR200-ZR300-and-SR300-Pixel-Formats.patch
-fi
+echo -e "\e[32mApplying F200 formats patch patch\e[0m"
+patch -p1 < ../"$( dirname "$0" )"/0001-Add-video-formats-for-Intel-real-sense-F200-camera-new.patch
+echo -e "\e[32mApplying ZR300 SR300 and LR200 formats patch\e[0m"
+patch -p1 < ../"$( dirname "$0" )"/0002-LR200-ZR300-and-SR300-Pixel-Formats.patch
 
 # Copy configuration
 sudo cp /usr/src/linux-headers-$(uname -r)/.config .
