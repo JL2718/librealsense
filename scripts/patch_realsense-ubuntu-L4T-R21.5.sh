@@ -25,7 +25,7 @@ LINUX_BRANCH=$(uname -r)
 wget https://developer.nvidia.com/embedded/dlc/l4t-Jetson-TK1-Kernel-Sources-R21-5 -O ~/Downloads/kernel.tbz2
 cd /usr/src/
 tar -jxvf ~/Downloads/kernel.tbz2
-
+cd kernel/
 
 echo -e "\e[32mApplying F200 formats patch patch\e[0m"
 patch -p1 < ../"$( dirname "$0" )"/0001-Add-video-formats-for-Intel-real-sense-F200-camera-new.patch
