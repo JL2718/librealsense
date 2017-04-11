@@ -27,4 +27,6 @@ SUBDIRS += \
    ./unit-tests-live-sr300.pro \
    ./unit-tests-offline.pro \
    ./my-cpp-multicloud.pro \
-   ./my-cpp-multiraster.pro
+   ./my-cpp-multiraster.pro \
+   ./my-cpp-fastercloud.pro
+

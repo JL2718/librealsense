@@ -1,8 +1,21 @@
+// License: Apache 2.0. See LICENSE file in root directory.
+// Copyright(c) 2015 Intel Corporation. All Rights Reserved.
+
+///////////////////////////////////////////////////////
+// librealsense tutorial #3 - Point cloud generation //
+///////////////////////////////////////////////////////
+
+// First include the librealsense C++ header file
 #include <librealsense/rs.hpp>
 #include <cstdio>
 
+// Also include GLFW to allow for graphical display
 #define GLFW_INCLUDE_GLU
 #include <GLFW/glfw3.h>
+
+//pcl
+#include <pcl/common/common_headers.h>
+
 
 double yaw, pitch, lastX, lastY; int ml, mode;
 double ipd, vshift,dshift;
@@ -32,10 +45,10 @@ static void on_keypress(GLFWwindow * win, int key,int scancode,int action, int m
             ipd-=0.01;
             break;
         case(GLFW_KEY_UP):
-            vshift-=0.01;
+            vshift-=0.02;
             break;
         case(GLFW_KEY_DOWN):
-            vshift+=0.01;
+            vshift+=0.02;
             break;
         case(GLFW_KEY_SPACE):
             pitch=0.0;
@@ -78,6 +91,10 @@ int main() try
     dev->enable_stream(rs::stream::infrared2, 640, 480, rs::format::y8, 60);
     dev->start();
 
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr rsCloudPtr( new pcl::PointCloud<pcl::PointXYZRGB> );
+    pcl::PointCloud
+
+
     GLuint tex;
     glGenTextures(1, &tex);
 
@@ -86,7 +103,7 @@ int main() try
     //GLFWwindow * win = glfwCreateWindow(1280, 960, "librealsense tutorial #3", nullptr, nullptr);
     int n_monitors;
     GLFWmonitor** monitors = glfwGetMonitors(&n_monitors);
-    GLFWwindow * win = glfwCreateWindow(1920, 1080, "Yeah dude, I rock on a different monitor!", 1 ? monitors[n_monitors - 1] : nullptr, nullptr);
+    GLFWwindow * win = glfwCreateWindow(1920, 1080, "Yeah dude, I rock on a different monitor!", 0 ? monitors[n_monitors - 1] : nullptr, nullptr);
     glfwSetCursorPosCallback(win, on_cursor_pos);
     glfwSetMouseButtonCallback(win, on_mouse_button);
     glfwSetKeyCallback(win,on_keypress);
@@ -130,10 +147,10 @@ int main() try
         auto make_pointcloud = [&](double vx=0.0,double vy=0.0,double vz=0.0){
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
-            gluPerspective(90, (float)960/1080, 0.01f, 20.0f);
+            gluPerspective(60, (float)960/1080, 0.01f, 20.0f);
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
-            gluLookAt(vx,vy,vz, vx,vy,1, 0,-1,0);
+            gluLookAt(vx,vy,vz, 0,0,1, 0,-1,0);
             glTranslatef(0,0,+0.5f);
             glRotated(pitch, 1, 0, 0);
             glRotated(yaw, 0, 1, 0);
@@ -143,7 +160,6 @@ int main() try
             glPointSize(2);
             glEnable(GL_DEPTH_TEST);
             glBegin(GL_POINTS);
-
             float last_depth=0.0;
             float last_line[depth_intrin.width];
             for(int dy=0; dy<depth_intrin.height; ++dy)
@@ -156,8 +172,7 @@ int main() try
 
                     // Skip over pixels with a depth value of zero, which is used to indicate no data
                     if(depth_value == 0)
-                        continue;//
-                        //depth_in_meters=(last_depth+last_line[dx])/2;
+                        depth_in_meters=(last_depth+last_line[dx])/2;
                     else
                         last_depth = depth_in_meters;
                     last_line[dx]=depth_in_meters;
@@ -242,16 +257,15 @@ int main() try
         switch(mode % 3){
             case(0):
                 glViewport(0,0,960,1080);
-                make_pointcloud(-ipd,vshift,-0.05);
+                make_pointcloud(-ipd,vshift,0);
                 glViewport(960,0,960,1080);
-                make_pointcloud(ipd,vshift,-0.05);
+                make_pointcloud(ipd,vshift,0);
                 break;
             case(1):
                 make_infrared();
                 break;
              case(2):
                 make_color();
-                break;
              case(3): //should never get here
                 glViewport(0,0,960,1080);
                 make_color3();
@@ -276,3 +290,4 @@ catch(const rs::error & e)
 }
 
 
+// IG: dollfaceslayerr
